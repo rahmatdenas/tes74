@@ -90,12 +90,6 @@
     overflow-y: auto; /* Pastikan scroll tetap aktif di dalam sini */
   }
 
-  .timeline-figure {
-    float: none;
-    width: 100%;
-    margin: 0 0 12px 0;
-  }
-
   /* ---------- Popup Peta ---------- */
   .leaflet-popup-content {
     font-size: 15px;
