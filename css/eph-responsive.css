@@ -22,13 +22,16 @@
     z-index: 1;
   }
 
-  #panel {
+#panel {
     z-index: 500;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    /* Translate bawaan dihilangkan karena sekarang 100% diatur JS */
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    /* TAMBAHAN KUNCI: */
+    box-sizing: border-box;
+    padding-bottom: 50vh; /* Mendorong semua konten agar tidak masuk ke area off-screen */
   }
 
   #panel.eph-dragging {
@@ -62,13 +65,13 @@
 
   /* ---------- Branding & Navigasi Lebih Ringkas ---------- */
   #branding p {
-    margin-top: 15px; /* Sedikit disesuaikan agar proporsional */
+    margin-top: 5px; /* Sedikit disesuaikan agar proporsional */
     font-size: 11px;
   }
 
   #branding h1 {
     font-size: 20px;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
   }
 
   nav ul {
@@ -82,6 +85,10 @@
     /* Pastikan bagian yang bisa di-scroll tidak mentok */
     height: calc(100% - 130px); 
     overflow-y: auto;
+    /* PERBAIKAN KUNCI: */
+    flex: 1;          /* Biarkan sistem Flexbox yang menghitung sisa ruangnya otomatis */
+    height: auto;     /* Hapus aturan height: calc(100% - 130px) lama yang tidak akurat */
+    overflow-y: auto; /* Pastikan scroll tetap aktif di dalam sini */
   }
 
   .timeline-figure {
