@@ -88,7 +88,7 @@ marker.on('click', function() {
         setTimeout(function() {
           // KUNCI PERBAIKAN: Kurangi posisi item dengan posisi wadahnya
           // Dikurangi lagi 10px agar tahun tidak terlalu menempel ke garis header
-          let scrollPos = targetItem.offsetTop - detailsContainer.offsetTop - 10; 
+          let scrollPos = targetItem.offsetTop - detailsContainer.offsetTop; 
           
           // Pastikan angka tidak negatif (jika item pertama yang diklik)
           if (scrollPos < 0) scrollPos = 0;
