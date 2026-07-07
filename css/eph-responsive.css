@@ -31,7 +31,6 @@
     
     /* TAMBAHAN KUNCI: */
     box-sizing: border-box;
-    padding-bottom: 50vh; /* Mendorong semua konten agar tidak masuk ke area off-screen */
   }
 
   #panel.eph-dragging {
