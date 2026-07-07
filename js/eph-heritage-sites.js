@@ -92,8 +92,12 @@ marker.on('click', function() {
         
         // Kita beri jeda 300ms agar animasi panel yang naik ke 50% selesai dulu
         setTimeout(function() {
-          // Menghitung posisi atas elemen relatif terhadap kontainer
-          let scrollPos = targetItem.offsetTop; 
+          // KUNCI PERBAIKAN: Kurangi posisi item dengan posisi wadahnya
+          // Dikurangi lagi 10px agar tahun tidak terlalu menempel ke garis header
+          let scrollPos = targetItem.offsetTop - detailsContainer.offsetTop - 10; 
+          
+          // Pastikan angka tidak negatif (jika item pertama yang diklik)
+          if (scrollPos < 0) scrollPos = 0;
           
           detailsContainer.scrollTo({
             top: scrollPos,
