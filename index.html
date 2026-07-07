@@ -10,46 +10,40 @@
 <link rel="stylesheet" href="css/eph-common.css" />
 </head>
 <body>
-<section id="panel">
-  <header id="branding" role="banner">
-    <p>Linimasa Historis</p>
-    <h1>Jejak Spasial Tokoh</h1>
-  </header>
+  <section id="panel">
+    <header id="branding" role="banner">
+      <p>Linimasa Historis</p>
+      <h1>Jejak Spasial Tokoh</h1>
+    </header>
 
-  <div id="loading" class="panel-content" data-display="flex">
-    <div class="loader"></div>
-  </div>
+    <div id="loading" class="panel-content" data-display="flex">
+      <div class="loader"></div>
+    </div>
 
-  <section id="details" class="panel-content" data-display="block">
-    </section>
+    <section id="details" class="panel-content" data-display="block">
+      </section>
 
     <nav>
-    <ul>
-      <li class="selected"><a href="#details">Linimasa</a></li>
-      <li><a href="#about">Tentang</a></li>
-      <li><a href="#jelajahi">Jelajahi</a></li>
-    </ul>
-  </nav>
-  
-  <section id="about" class="panel-content" data-display="block">
-    <p>Peta ini memvisualisasikan pergerakan spasial dan tempat tinggal tokoh sejarah secara kronologis berdasarkan data Wikidata.</p>
+      <ul>
+        <li class="selected"><a href="#details">Linimasa</a></li>
+        <li><a href="#about">Tentang</a></li>
+      </ul>
+    </nav>
+    
+    <section id="about" class="panel-content" data-display="block">
+      <p>Peta ini memvisualisasikan pergerakan spasial dan tempat tinggal tokoh sejarah secara kronologis berdasarkan data Wikidata.</p>
     </section>
-
-</section>
-  <section id="details" class="panel-content" data-display="block"><!-- dummy node --></section>
-
-  <section id="about" class="panel-content" data-display="block">
-    <p>Halo!</p>
   </section>
-</section>
-<section id="map"></section>
-<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-<script src="js/leaflet.extra-markers.min.js"></script>
-<script src="js/osmtogeojson.js"></script>
-<script src="js/load-jsonp.js"></script>
-<script src="js/eph-heritage-sites-globals.js"></script>
-<script src="js/eph-common.js"></script>
-<script src="js/eph-heritage-sites.js"></script>
+
+  <section id="map"></section>
+
+  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+  <script src="js/leaflet.extra-markers.min.js"></script>
+  <script src="js/osmtogeojson.js"></script>
+  <script src="js/load-jsonp.js"></script>
+  <script src="js/eph-heritage-sites-globals.js"></script>
+  <script src="js/eph-common.js"></script>
+  <script src="js/eph-heritage-sites.js"></script>
 </body>
 </html>
