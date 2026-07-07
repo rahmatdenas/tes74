@@ -4,7 +4,6 @@ function loadPrimaryData() {
   queryWdqsThenProcess(
     SPARQL_RESIDENCE_QUERY,
     function(result) {
-      // Ekstraksi tiap baris data
       let record = {
         locationName: result.locationLabel.value,
         rawTime: result.pointInTime.value,
@@ -25,7 +24,6 @@ function loadPrimaryData() {
       TimelineRecords.push(record);
     },
     function() {
-      // Urutkan berdasarkan waktu mentah paling awal ke akhir
       TimelineRecords.sort((a, b) => a.rawTime.localeCompare(b.rawTime));
       renderMapAndPanel();
     }
@@ -38,10 +36,14 @@ function renderMapAndPanel() {
   let allHtml = ''; 
   let jedaScroll = null;
   let jedaAutoScroll = null;
+  
+  // Memori State
   let indexAktif = '-1';
-let kandidatIndexAktif = null;
+  let kandidatIndexAktif = null; 
 
+  // ==========================================
   // 1. RAKIT KONTEN HTML PANEL
+  // ==========================================
   TimelineRecords.forEach((record, index) => {
     allHtml += `
       <div class="timeline-item" id="item-${index}" data-index="${index}">
@@ -65,12 +67,13 @@ let kandidatIndexAktif = null;
 
   detailsContainer.innerHTML = allHtml;
 
-  // 2. RENDER MARKER & SIMPAN REFERENSI
+  // ==========================================
+  // 2. RENDER MARKER & INTERAKSI KLIK MARKER
+  // ==========================================
   TimelineRecords.forEach((record, index) => {
     if (record.lat && record.lon) {
       let marker = L.marker([record.lat, record.lon]).addTo(Map);
       
-      // Simpan langsung di dalam objek record agar lebih rapi
       record.marker = marker; 
       markerBounds.push([record.lat, record.lon]);
       
@@ -83,15 +86,16 @@ let kandidatIndexAktif = null;
       `;
       marker.bindPopup(popupContent);
       
-      // Interaksi: Klik marker otomatis scroll panel
-marker.on('click', function() {
+      // Event saat Marker di Klik
+      marker.on('click', function() {
         
-        if (typeof window.setMobilePanelExpanded === 'function') {
-          window.setMobilePanelExpanded(true); 
-        }
+        // Sengaja Dihapus/Komen agar klik marker tidak memaksa buka panel
+        // if (typeof window.setMobilePanelExpanded === 'function') {
+        //   window.setMobilePanelExpanded(true); 
+        // }
 
-        // KUNCI 2: Catat di memori bahwa marker ini sedang kita buka secara manual
-        indexAktif = index.toString();
+        let indexStr = index.toString();
+        indexAktif = indexStr; // Sinkronkan memori
 
         detailsContainer.classList.add('sedang-auto-scroll');
         clearTimeout(jedaAutoScroll);
@@ -100,6 +104,7 @@ marker.on('click', function() {
           detailsContainer.classList.remove('sedang-auto-scroll');
         }, 1200); 
 
+        // Gulir panel ke target yang diklik
         let targetItem = document.getElementById(`item-${index}`);
         setTimeout(function() {
           let scrollPos = targetItem.offsetTop - detailsContainer.offsetTop; 
@@ -110,23 +115,42 @@ marker.on('click', function() {
     }
   });
 
-  // 3. FITUR: KLIK H2 = BUKA MARKER (Menggunakan Event Delegation - Lebih Ringan)
+  // ==========================================
+  // 3. FITUR: KLIK H2 (BUKA MARKER + SCROLL PANEL)
+  // ==========================================
   detailsContainer.addEventListener('click', function(e) {
     if (e.target && e.target.classList.contains('timeline-date')) {
       let parentDiv = e.target.closest('.timeline-item');
-      let index = parseInt(parentDiv.getAttribute('data-index'));
+      let indexStr = parentDiv.getAttribute('data-index');
+      let index = parseInt(indexStr);
       let targetRecord = TimelineRecords[index];
 
       if (targetRecord && targetRecord.marker) {
+        // Geser peta
         targetRecord.marker.openPopup();
-        Map.panTo(targetRecord.marker.getLatLng()); // Geser peta perlahan
+        Map.panTo(targetRecord.marker.getLatLng()); 
+
+        indexAktif = indexStr; // Sinkronkan memori
+
+        // Gulir panel ke H2 yang sedang diklik
+        detailsContainer.classList.add('sedang-auto-scroll');
+        clearTimeout(jedaAutoScroll);
+        
+        jedaAutoScroll = setTimeout(() => {
+          detailsContainer.classList.remove('sedang-auto-scroll');
+        }, 1200); 
+
+        let scrollPos = parentDiv.offsetTop - detailsContainer.offsetTop; 
+        if (scrollPos < 0) scrollPos = 0;
+        detailsContainer.scrollTo({ top: scrollPos, behavior: 'smooth' });
       }
     }
   });
 
-  // 4. FITUR: SCROLLTELLING DENGAN INTERSECTION OBSERVER (Performa Juara!)
-  // 4. FITUR: SCROLLTELLING SUPER RINGAN (Optimal untuk HP Spek Rendah)
-let observer = new IntersectionObserver((entries) => {
+  // ==========================================
+  // 4. SCROLLTELLING OBSERVER (Pendeteksi Kandidat)
+  // ==========================================
+  let observer = new IntersectionObserver((entries) => {
     if (detailsContainer.classList.contains('sedang-auto-scroll')) return;
 
     let yangMenyentuh = entries.filter(e => e.isIntersecting);
@@ -134,10 +158,11 @@ let observer = new IntersectionObserver((entries) => {
 
     let entryTerpilih = yangMenyentuh[yangMenyentuh.length - 1];
     
-    // Sesuaikan ini tergantung Anda memantau .timeline-item atau h2
-    let parentDiv = entryTerpilih.target.closest('.timeline-item'); 
+    // Karena target kita sekarang adalah container utuh (.timeline-item)
+    // kita bisa langsung ambil getAttribute dari entryTerpilih.target
+    let parentDiv = entryTerpilih.target; 
     
-    // Cukup catat ke memori sementara, JANGAN jalankan timeout di sini
+    // Catat ke memori sementara (jangan eksekusi peta di sini)
     kandidatIndexAktif = parentDiv.getAttribute('data-index');
     
   }, {
@@ -146,23 +171,24 @@ let observer = new IntersectionObserver((entries) => {
     threshold: 0
   });
 
-  // Pasang sensor (Sesuaikan dengan elemen target Anda)
-  document.querySelectorAll('.timeline-date').forEach(item => {
+  // Pasang sensor di .timeline-item (Jauh lebih andal dari memantau H2)
+  document.querySelectorAll('.timeline-item').forEach(item => {
     observer.observe(item);
   });
 
   // ==========================================
-  // 2. SCROLL EVENT UNTUK DETEKSI BERHENTI TOTAL
+  // 5. SCROLL EVENT (Eksekusi Saat Berhenti)
   // ==========================================
-detailsContainer.addEventListener('scroll', () => {
-    
+  detailsContainer.addEventListener('scroll', () => {
     if (detailsContainer.classList.contains('sedang-auto-scroll')) return;
     
     clearTimeout(jedaScroll);
     
     jedaScroll = setTimeout(() => {
+      // Jika gulir berhenti, periksa kandidat
       if (kandidatIndexAktif !== null && kandidatIndexAktif !== indexAktif) {
-        indexAktif = kandidatIndexAktif;
+        
+        indexAktif = kandidatIndexAktif; // Kunci kandidat menjadi lokasi aktif
         let indexAngka = parseInt(indexAktif);
         let targetRecord = TimelineRecords[indexAngka];
         
@@ -173,13 +199,15 @@ detailsContainer.addEventListener('scroll', () => {
       }
     }, 300); 
 
-  }, { passive: true });
+  }, { passive: true }); // Mengurangi beban di HP spek rendah
 
-  // Matikan animasi loading dan tampilkan panel details
+  // ==========================================
+  // 6. FINALIZE UI
+  // ==========================================
   document.getElementById('loading').style.display = 'none';
   detailsContainer.style.display = 'block';
 
-  // Sesuaikan zoom peta
+  // Sesuaikan zoom peta agar semua marker terlihat di awal
   if (markerBounds.length > 0) {
     Map.fitBounds(markerBounds, { padding: [40, 40] });
   }
