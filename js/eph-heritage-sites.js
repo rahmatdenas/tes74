@@ -34,47 +34,68 @@ function loadPrimaryData() {
 
 function renderMapAndPanel() {
   let detailsContainer = document.getElementById('details');
-  detailsContainer.innerHTML = ''; 
+  detailsContainer.innerHTML = ''; // Bersihkan panel sebelum diisi
   let markerBounds = [];
 
   TimelineRecords.forEach((record, index) => {
-    // 1. RENDER KONTEN PANEL SAMPING (UI Sederhana)
+    // ---------------------------------------------------------
+    // 1. RENDER KONTEN PANEL SAMPING (Sesuai hierarki yang diminta)
+    // ---------------------------------------------------------
     let panelHtml = `
-      <div class="timeline-item" id="item-${index}" style="margin-bottom: 30px;">
-        <h2 style="margin-bottom: 10px;">${record.formattedDate}</h2>
-        ${record.imageUrl ? `<img src="${record.imageUrl}" alt="${record.locationName}" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''}
-        <p style="margin: 0;"><strong>${record.locationName}</strong></p>
-        ${record.lat && record.lon ? `<p style="font-size: 0.9em; color: #555;">Koordinat: ${record.lat.toFixed(4)}, ${record.lon.toFixed(4)}</p>` : ''}
-        <hr style="margin-top: 20px;">
+      <div class="timeline-item" id="item-${index}" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+        
+        <h2 style="margin-top: 0; color: #b30000;">${record.formattedDate}</h2>
+        
+        ${record.imageUrl ? `
+        <figure style="margin: 0 0 15px 0;">
+          <img src="${record.imageUrl}" alt="${record.locationName}" style="width:100%; border-radius:4px;">
+        </figure>
+        ` : ''}
+        
+        <div class="location-desc">
+          <p style="margin: 0 0 5px 0;"><strong>${record.locationName}</strong></p>
+          ${record.lat && record.lon ? `
+          <p style="margin: 0; font-size: 0.85em; color: #666; font-family: monospace;">
+            Koordinat: ${record.lat.toFixed(4)}, ${record.lon.toFixed(4)}
+          </p>
+          ` : ''}
+        </div>
+
       </div>
     `;
     detailsContainer.innerHTML += panelHtml;
 
-    // 2. RENDER MARKER & POPUP PETA
+    // ---------------------------------------------------------
+    // 2. RENDER MARKER & LEAFLET POPUP
+    // ---------------------------------------------------------
     if (record.lat && record.lon) {
       let marker = L.marker([record.lat, record.lon]).addTo(Map);
       markerBounds.push([record.lat, record.lon]);
       
-      // Popup UI: Gambar -> Judul Lokasi -> Waktu
+      // Popup UI yang juga selaras
       let popupContent = `
-        <div style="text-align:center; min-width: 150px;">
+        <div style="text-align:center; min-width: 160px;">
           ${record.imageUrl ? `<img src="${record.imageUrl}" style="width:100%; max-width:200px; border-radius:4px; margin-bottom:8px;"><br>` : ''}
-          <strong style="font-size:1.1em;">${record.locationName}</strong><br>
-          <span style="color:#666; font-size:0.9em;">${record.formattedDate}</span>
+          <strong style="font-size:1.1em; display:block; margin-bottom:4px;">${record.locationName}</strong>
+          <span style="color:#b30000; font-weight:bold; font-size:0.9em;">${record.formattedDate}</span>
         </div>
       `;
       marker.bindPopup(popupContent);
       
-      // Interaksi: Klik marker otomatis scroll panel
+      // Interaksi: Klik marker di peta akan melakukan auto-scroll panel samping ke item terkait
       marker.on('click', function() {
         document.getElementById(`item-${index}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
   });
 
-  // Sesuaikan zoom peta agar semua marker terlihat
+  // Matikan animasi loading dan tampilkan panel details
+  document.getElementById('loading').style.display = 'none';
+  detailsContainer.style.display = 'block';
+
+  // Sesuaikan zoom peta agar semua marker terlihat sekaligus
   if (markerBounds.length > 0) {
-    Map.fitBounds(markerBounds, { padding: [30, 30] });
+    Map.fitBounds(markerBounds, { padding: [40, 40] });
   }
 }
 
