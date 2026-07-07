@@ -34,17 +34,15 @@ function loadPrimaryData() {
 
 function renderMapAndPanel() {
   let detailsContainer = document.getElementById('details');
-  detailsContainer.innerHTML = ''; // Bersihkan panel sebelum diisi
   let markerBounds = [];
+  let allHtml = ''; // Optimasi: Kita kumpulkan HTML di sini dulu
 
+  // 1. RAKIT KONTEN HTML PANEL
   TimelineRecords.forEach((record, index) => {
-    // ---------------------------------------------------------
-    // 1. RENDER KONTEN PANEL SAMPING (Sesuai hierarki yang diminta)
-    // ---------------------------------------------------------
-let panelHtml = `
+    allHtml += `
       <div class="timeline-item" id="item-${index}">
         
-        <h2 class="timeline-date">${record.formattedDate}</h2>
+        <h2 class="timeline-date" style="cursor: pointer;" title="Klik untuk lihat di peta">${record.formattedDate}</h2>
         
         ${record.imageUrl ? `
         <figure class="timeline-figure">
@@ -58,17 +56,21 @@ let panelHtml = `
           <p class="coord-text">Koordinat: ${record.lat.toFixed(4)}, ${record.lon.toFixed(4)}</p>
           ` : ''}
         </div>
-
       </div>
     `;
-    detailsContainer.innerHTML += panelHtml;
+  });
 
-    // 2. RENDER MARKER & LEAFLET POPUP
+  // Suntikkan HTML sekaligus (Jauh lebih ringan untuk browser!)
+  detailsContainer.innerHTML = allHtml;
+
+  // 2. RENDER MARKER & SIMPAN REFERENSINYA
+  TimelineRecords.forEach((record, index) => {
     if (record.lat && record.lon) {
       let marker = L.marker([record.lat, record.lon]).addTo(Map);
+      
+      record.marker = marker; // KUNCI: Simpan marker ke dalam data record agar bisa dipanggil dari luar
       markerBounds.push([record.lat, record.lon]);
       
-      // Popup UI (Bersih dari CSS)
       let popupContent = `
         <div class="custom-popup">
           ${record.imageUrl ? `<img src="${record.imageUrl}"><br>` : ''}
@@ -78,36 +80,77 @@ let panelHtml = `
       `;
       marker.bindPopup(popupContent);
       
-      // Interaksi: Klik marker di peta akan melakukan auto-scroll panel samping ke item terkait
-marker.on('click', function() {
- 
-        let detailsContainer = document.getElementById('details');
+      // Interaksi: Klik marker -> Scroll panel
+      marker.on('click', function() {
+        
+        // Matikan sensor scroll sementara agar tidak terjadi "tabrakan" perintah
+        detailsContainer.classList.add('sedang-auto-scroll');
+        setTimeout(() => detailsContainer.classList.remove('sedang-auto-scroll'), 1000);
+
+        if (typeof window.setMobilePanelExpanded === 'function') {
+          window.setMobilePanelExpanded(true); 
+        }
+        
         let targetItem = document.getElementById(`item-${index}`);
-        
-        // Kita beri jeda 300ms agar animasi panel yang naik ke 50% selesai dulu
         setTimeout(function() {
-          // KUNCI PERBAIKAN: Kurangi posisi item dengan posisi wadahnya
-          // Dikurangi lagi 10px agar tahun tidak terlalu menempel ke garis header
           let scrollPos = targetItem.offsetTop - detailsContainer.offsetTop; 
-          
-          // Pastikan angka tidak negatif (jika item pertama yang diklik)
           if (scrollPos < 0) scrollPos = 0;
-          
-          detailsContainer.scrollTo({
-            top: scrollPos,
-            behavior: 'smooth'
-          });
+          detailsContainer.scrollTo({ top: scrollPos, behavior: 'smooth' });
         }, 300);
-        
       });
     }
-});
+  });
+
+  // ---------------------------------------------------------
+  // FITUR BARU 1: KLIK H2 UNTUK MEMBUKA MARKER
+  // ---------------------------------------------------------
+  detailsContainer.addEventListener('click', function(e) {
+    // Cek apakah yang diklik adalah elemen dengan kelas 'timeline-date' (H2)
+    if (e.target && e.target.classList.contains('timeline-date')) {
+      let parentDiv = e.target.closest('.timeline-item');
+      let index = parseInt(parentDiv.id.replace('item-', ''));
+      let targetRecord = TimelineRecords[index];
+
+      // Buka popup dan biarkan Leaflet menggeser peta secara otomatis
+      if (targetRecord && targetRecord.marker) {
+        targetRecord.marker.openPopup();
+      }
+    }
+  });
+
+  // ---------------------------------------------------------
+  // FITUR BARU 2: SCROLL PANEL OTOMATIS BUKA MARKER 
+  // ---------------------------------------------------------
+  detailsContainer.addEventListener('scroll', function() {
+    // Jangan lakukan apa-apa jika panel sedang digulir otomatis akibat klik marker
+    if (detailsContainer.classList.contains('sedang-auto-scroll')) return;
+
+    let containerRect = detailsContainer.getBoundingClientRect();
+    let items = detailsContainer.querySelectorAll('.timeline-item');
+
+    // Pindai semua item, cari mana yang sedang menempel di atas batas panel
+    for (let i = 0; i < items.length; i++) {
+      let rect = items[i].getBoundingClientRect();
+
+      // Logika: Jika bagian atas elemen ini sudah menyentuh batas atas wadah,
+      // dan bagian bawah elemen ini masih berada di dalam wadah (belum terlewat)
+      if (rect.top <= containerRect.top + 30 && rect.bottom >= containerRect.top + 30) {
+        let targetRecord = TimelineRecords[i];
+        
+        // Cek agar tidak memanggil openPopup berulang-ulang pada marker yang sama
+        if (targetRecord && targetRecord.marker && !targetRecord.marker.isPopupOpen()) {
+          targetRecord.marker.openPopup();
+        }
+        break; // Segera hentikan pencarian jika sudah menemukan elemen yang aktif
+      }
+    }
+  });
 
   // Matikan animasi loading dan tampilkan panel details
   document.getElementById('loading').style.display = 'none';
   detailsContainer.style.display = 'block';
 
-  // Sesuaikan zoom peta agar semua marker terlihat sekaligus
+  // Sesuaikan zoom peta
   if (markerBounds.length > 0) {
     Map.fitBounds(markerBounds, { padding: [40, 40] });
   }
