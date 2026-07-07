@@ -41,14 +41,14 @@ function renderMapAndPanel() {
     // ---------------------------------------------------------
     // 1. RENDER KONTEN PANEL SAMPING (Sesuai hierarki yang diminta)
     // ---------------------------------------------------------
-    let panelHtml = `
-      <div class="timeline-item" id="item-${index}" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+  let panelHtml = `
+      <div class="timeline-item" id="item-${index}">
         
         <h2 style="margin-top: 0; color: #b30000;">${record.formattedDate}</h2>
         
         ${record.imageUrl ? `
-        <figure style="margin: 0 0 15px 0;">
-          <img src="${record.imageUrl}" alt="${record.locationName}" style="width:100%; border-radius:4px;">
+        <figure style="float: right; width: 50%; margin: 0 0 10px 15px; padding: 0;">
+          <img src="${record.imageUrl}" alt="${record.locationName}" style="width: 100%; border-radius: 4px; border: 2px solid #eee;">
         </figure>
         ` : ''}
         
