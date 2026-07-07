@@ -36,6 +36,8 @@ function renderMapAndPanel() {
   let detailsContainer = document.getElementById('details');
   let markerBounds = [];
   let allHtml = ''; 
+  let jedaScroll = null;
+  let jedaAutoScroll = null;
 
   // 1. RAKIT KONTEN HTML PANEL
   TimelineRecords.forEach((record, index) => {
@@ -80,16 +82,20 @@ function renderMapAndPanel() {
       marker.bindPopup(popupContent);
       
       // Interaksi: Klik marker otomatis scroll panel
-      marker.on('click', function() {
-        
-        // BUKA PANEL DI SELULER (Jangan sampai lupa ini!)
+marker.on('click', function() {
         if (typeof window.setMobilePanelExpanded === 'function') {
           window.setMobilePanelExpanded(true); 
         }
 
-        // Kunci observer sementara agar tidak bentrok
+        // KUNCI PERBAIKAN 1: Reset waktu setiap kali marker diklik
         detailsContainer.classList.add('sedang-auto-scroll');
-        setTimeout(() => detailsContainer.classList.remove('sedang-auto-scroll'), 1000);
+        clearTimeout(jedaAutoScroll);
+        
+        // Beri waktu lebih panjang (misal 1.2 detik) agar animasi gulir selesai
+        // sebelum sensor observer dihidupkan kembali
+        jedaAutoScroll = setTimeout(() => {
+          detailsContainer.classList.remove('sedang-auto-scroll');
+        }, 1200); 
 
         let targetItem = document.getElementById(`item-${index}`);
         setTimeout(function() {
@@ -117,27 +123,32 @@ function renderMapAndPanel() {
 
   // 4. FITUR: SCROLLTELLING DENGAN INTERSECTION OBSERVER (Performa Juara!)
   // 4. FITUR: SCROLLTELLING SUPER RINGAN (Optimal untuk HP Spek Rendah)
-  let observer = new IntersectionObserver((entries) => {
+let observer = new IntersectionObserver((entries) => {
     
-    // Abaikan deteksi jika panel sedang otomatis menggulir karena klik marker
+    // Jika panel sedang bergulir karena klik marker, matikan fungsi ini total
     if (detailsContainer.classList.contains('sedang-auto-scroll')) return;
 
     entries.forEach(entry => {
-      // entry.isIntersecting bernilai TRUE saat judul H2 menyentuh "kawat jebakan" di atas panel
       if (entry.isIntersecting) {
         let parentDiv = entry.target.closest('.timeline-item');
         let index = parentDiv.getAttribute('data-index');
         let targetRecord = TimelineRecords[index];
         
-        if (targetRecord && targetRecord.marker && !targetRecord.marker.isPopupOpen()) {
-          targetRecord.marker.openPopup();
-          Map.panTo(targetRecord.marker.getLatLng());
-        }
+        // KUNCI PERBAIKAN 2: Teknik Debouncing (Ide Anda)
+        // Batalkan perintah buka popup sebelumnya jika pengguna masih asyik scroll
+        clearTimeout(jedaScroll);
+        
+        // Buat perintah baru yang akan dieksekusi HANYA jika scroll berhenti selama 350ms
+        jedaScroll = setTimeout(() => {
+          if (targetRecord && targetRecord.marker && !targetRecord.marker.isPopupOpen()) {
+            targetRecord.marker.openPopup();
+            Map.panTo(targetRecord.marker.getLatLng());
+          }
+        }, 350); 
       }
     });
   }, {
     root: detailsContainer,
-    // "Kawat Jebakan" (Sensor): Hanya mengawasi ruang 10% paling atas di bawah header
     rootMargin: '0px 0px -90% 0px', 
     threshold: 0
   });
