@@ -85,7 +85,11 @@ function renderMapAndPanel() {
         </div>
       `;
       
-      marker.bindPopup(popupContent, { autoPan: false });
+marker.bindPopup(popupContent, { 
+        autoPan: false,
+        minWidth: 160, // Sesuaikan angkanya sesuai selera
+        maxWidth: 160  // Samakan dengan minWidth agar ukurannya statis
+      });
       
       // Event saat Marker di Klik
       marker.on('click', function() {
