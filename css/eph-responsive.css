@@ -58,7 +58,6 @@
   #branding {
     position: relative;
     touch-action: none;
-    cursor: grab;
     flex-shrink: 0; /* Header jangan sampai menyusut */
     box-sizing: border-box;
     overflow: hidden;
@@ -87,6 +86,37 @@
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 
+/* --- HANDLE TIPIS UNTUK DRAG --- */
+  #drag-handle {
+    width: 50px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    margin: 10px auto;
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+  }
+
+  /* --- TOMBOL PLAY/PAUSE BARU --- */
+  #play-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 28px; /* Ukuran ikon */
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.2s;
+  }
+  
 #details,
   #about {
     background: #fff;
