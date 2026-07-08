@@ -143,28 +143,40 @@ if (detailsContainer) {
     }
   }
 
-  window.addEventListener('load', function() {
+ window.addEventListener('load', function() {
     panel = document.getElementById('panel');
     header = document.getElementById('branding');
     navMenu = document.querySelector('nav');
     if (!panel || !header) return;
 
-    // KUNCI: SUNTIKKAN IKON TOGGLE (JIKA BELUM ADA)
-    if (!document.getElementById('panel-toggle')) {
-      toggleIcon = document.createElement('div');
-      toggleIcon.id = 'panel-toggle';
-      toggleIcon.innerHTML = '&#9660;'; // Chevron Bawah
-      header.appendChild(toggleIcon);
-    } else {
-      toggleIcon = document.getElementById('panel-toggle');
+    // 1. SUNTIKKAN DRAG HANDLE (GAGANG TIPIS) DI ATAS PANEL
+    var dragHandle = document.getElementById('drag-handle');
+    if (!dragHandle) {
+      dragHandle = document.createElement('div');
+      dragHandle.id = 'drag-handle';
+      panel.insertBefore(dragHandle, panel.firstChild);
     }
+
+    // 2. SUNTIKKAN TOMBOL PLAY MENGGANTIKAN PANEL TOGGLE (CHEVRON)
+    var playBtn = document.getElementById('play-btn');
+    if (!playBtn) {
+      playBtn = document.createElement('button');
+      playBtn.id = 'play-btn';
+      playBtn.innerHTML = '▶'; // Ikon Play bawaan
+      header.appendChild(playBtn);
+    }
+    
+    // Hapus chevron lama jika kebetulan masih ada di HTML
+    var oldToggle = document.getElementById('panel-toggle');
+    if (oldToggle) oldToggle.remove();
 
     handleViewportChange();
 
-    header.addEventListener('touchstart', onTouchStart, { passive: false });
-    header.addEventListener('touchmove', onTouchMove, { passive: false });
-    header.addEventListener('touchend', onTouchEnd);
-    header.addEventListener('touchcancel', onTouchEnd);
+    // 3. KUNCI PERUBAHAN: DRAG HANYA BISA DARI HANDLE TIPIS
+    dragHandle.addEventListener('touchstart', onTouchStart, { passive: false });
+    dragHandle.addEventListener('touchmove', onTouchMove, { passive: false });
+    dragHandle.addEventListener('touchend', onTouchEnd);
+    dragHandle.addEventListener('touchcancel', onTouchEnd);
   });
 
   window.addEventListener('resize', handleViewportChange);
